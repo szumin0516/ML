@@ -1,11 +1,8 @@
-# Time series analysis - forecasting airline passengers
+# Time series alaysis - forecasting of airline passengers
 
 Time series data is a set of consecutive data points collected over time, which can be widely applied in various domains such as supply chain, business, and financial for predicting those future trends. Generally, the aim for such analysis is to identify future patterns or vairations based on historical data. In the proposed time series project, it is used to foresee the potential trend of airline passengers.
-
 ---
-
-### Data preparation
-##### Reqired packages
+### Reqired packages
 ```python
 import pandas as pd
 import numpy as np
@@ -16,13 +13,13 @@ import seaborn as sns
 import warnings
 warnings.filterwarnings('ignore')
 ```
-##### Loading data
+### Loading data
 ```python
 df = pd.read_csv('AirPassengers.csv')
 df.set_index('Month', inplace=True)
 df.head()
 ```
-##### Visualization of historical data
+### Visualization of historical data
 ```python
 plt.figure(figsize=(20, 5))
 plt.plot(df.index, df['#Passengers'], label='#Passengers')
@@ -34,7 +31,7 @@ plt.grid(True)
 plt.xticks(rotation=90)
 plt.show()
 ```
-##### Visualization of seasonal decomposition
+### Visualization of seasonal decomposition
 In order to look into current data more deeply, `seasonal_decompose` can be utilized to break down the time series dataset into 3 main components for further analyzing:
 * **Trend:** It represents the long term trend for time series data.
 * **Seasonal:** Seasonality indicates the repeating & short term fluctuations grouped by seasons or cycles.
@@ -72,7 +69,7 @@ plt.xticks(rotation=90)
 plt.tight_layout()
 plt.show()
 ```
-##### Augmented Dickey-Fuller (ADF) test
+### Augmented Dickey-Fuller (ADF) test
 ADF test is a statistical test that determines if a time series is stationary or not. 
 * `AIC` is chosen in `autolag` argument for its advantage for balancing between model fits.
 * `ADF statistic` indicates the stablization of the test result. The more negative the value is, the more stronger the evidence against the null hypothesis -> __the time series data is stationary.__
@@ -117,7 +114,7 @@ ax3.axes.xaxis.set_visible(False)
 
 plt.show()
 ```
-##### Autocorrelation Function (ACF) and Partial Autocorrelation Function (PACF)
+### Autocorrelation Function (ACF) and Partial Autocorrelation Function (PACF)
 * **ACF:** It measures the correlation between a time series and its lagged versions over different time lags. It ranges from -1 to 1. The more postive the value is, the more strongly positivly correlated. Otherwise, the more negative the value is, the more strongly negativly correlated.
 * **PACF:** It measures the correlation between a time series and its lagged versions while controlling for the influence of all shorter lags. It ranges from -1 to 1 as well.
 ```python
@@ -127,7 +124,7 @@ sm.graphics.tsa.plot_pacf(df.diff().dropna(), lags=40, ax=ax[1])
 plt.show()
 ```
 
-##### Model training
+### Model training
 Seasonal Autoregressive Integrated Moving Average (SARIMA) model, the seasonal version of ARIMA model, is designed to predict data with seasonal patterns. Before applying SARIMA, defining some important parameters are required.
 ```python
 p = 2 # pacf (autoregressive order)
@@ -144,4 +141,42 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 model = SARIMAX(df['#Passengers'], order=(p, d, q), seasonal_order=(P, D, Q, seasonal_period))
 fitted_model = model.fit()
 print(fitted_model.summary())
+```
+### Prediction
+Use the fitted SARIMA model to predict the number of passengers in the next 2 years.
+The argument `periods` is to specify the number of periods to generate. `+1` ensures the result date can cover the whole forecast period including the start date.
+`[1:]` is used to slice the date range to exclude the start date.
+```python
+# forecast for next 2 years
+forecast_steps = 24
+forecast = fitted_model.get_forecast(steps=forecast_steps)
+
+# create the date range for the forecasted values
+forecast_index = pd.date_range(start=df.index[-1], periods=forecast_steps+1, freq='M')[1:].strftime('%Y-%m') # remove start date
+```
+and demonstrate the prediction result in DataFrame
+```python
+# create a forecast dataframe
+forecast_df = pd.DataFrame({
+    "Forecast": list(forecast.predicted_mean),
+    "Lower CI": list(forecast.conf_int().iloc[:, 0]),
+    "Upper CI": list(forecast.conf_int().iloc[:, 1])
+}, index=forecast_index)
+
+forecast_df.head()
+```
+Finally, viusalize the prediction result.
+```python
+# plot the forecast values
+
+plt.figure(figsize=(12, 6))
+plt.plot(df['#Passengers'], label='Historical Data')
+plt.plot(forecast_df['Forecast'], label='Forecast Data')
+plt.fill_between(forecast_df.index, forecast_df['Lower CI'], forecast_df['Upper CI'], color='k', alpha=0.1)
+plt.xlabel('Date')
+plt.ylabel('Number of Passengers')
+plt.title('Air Passengers Forecast')
+plt.xticks(rotation=90)
+plt.legend()
+plt.show()
 ```
