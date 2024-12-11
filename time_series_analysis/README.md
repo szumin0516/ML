@@ -1,7 +1,9 @@
 # Time series alaysis - forecasting of airline passengers
 
 Time series data is a set of consecutive data points collected over time, which can be widely applied in various domains such as supply chain, business, and financial for predicting those future trends. Generally, the aim for such analysis is to identify future patterns or vairations based on historical data. In the proposed time series project, it is used to foresee the potential trend of airline passengers.
+
 ---
+
 ### Reqired packages
 ```python
 import pandas as pd
