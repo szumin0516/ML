@@ -167,7 +167,7 @@ forecast_df = pd.DataFrame({
 
 forecast_df.head()
 ```
-Finally, viusalize the prediction result.
+Finally, visualize the prediction result.
 ```python
 # plot the forecast values
 
